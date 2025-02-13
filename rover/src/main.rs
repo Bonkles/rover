@@ -25,25 +25,29 @@ async fn main() {
     let s3 = Client::new(&config);
     // Open the bucket named 'omf-internal-usw2' and list its contents
     let bucket_name = "omf-internal-usw2";
-    match s3.list_objects_v2().bucket(bucket_name).prefix("testing/gers-id-index-ordered/").send().await {
+    let GERS = &args.gers_id;
+    
+    // Parse the first three letters of the GERS ID
+    let gers_prefix = &GERS[..3];
+    println!("First three letters of GERS ID: {:?}", gers_prefix);
+    
+    match s3.list_objects_v2().bucket(bucket_name).prefix(format!("testing/gers-id-index-ordered/p1={}/", gers_prefix)).send().await {
         Ok(output) => {
             if let Some(objects) = output.contents {
-                println!("Objects in folder '/testing/gers-id-index-ordered/' in bucket '{}':", bucket_name);
+                println!("Objects in folder '/testing/gers-id-index-ordered/p1={}' in bucket '{}':", gers_prefix, bucket_name);
                 for object in objects {
                     if let Some(key) = object.key {
                         println!("{}", key);
                     }
                 }
             } else {
-                println!("No objects found in folder '/testing/gers-id-index-ordered/' in bucket '{}'.", bucket_name);
+                println!("No objects found in folder '/testing/gers-id-index-ordered/p1={}' in bucket '{}'.", gers_prefix, bucket_name);
             }
         }
         Err(error) => {
-            eprintln!("Error listing objects in folder '/testing/gers-id-index-ordered/' in bucket '{}': {:?}", bucket_name, error);
+            eprintln!("Error listing objects in folder '/testing/gers-id-index-ordered/p1={}' in bucket '{}': {:?}", gers_prefix, bucket_name, error);
         }
     }
-
-    let GERS = &args.gers_id;
     
     println!("GERS ID to check: {:?}", GERS);
 }
